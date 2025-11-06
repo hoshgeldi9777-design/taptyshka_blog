@@ -1,0 +1,67 @@
+{% extends 'blog/base.html' %}
+{% block title %}{{ post.title }} - Мой блог{% endblock %}
+{% block content %}
+
+<!-- 📷 Отображение изображения поста -->
+{% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid mb-3" style="max-width: 600px;">
+{% endif %}
+
+<!-- 🏷️ Отображение категории поста -->
+{% if post.category %}
+  <p><strong>🏷️ Категория:</strong>
+     <a href="{% url 'category_posts' post.category.slug %}">
+        {{ post.category.name }}
+     </a>
+  </p>
+{% endif %}
+
+<!-- 📝 Основной контент поста -->
+<h1>{{ post.title }}</h1>
+<p class="text-muted">📅{{ post.date }}</p>
+<p>{{ post.text }}</p>
+
+<!-- 🔖 Отображение тегов поста -->
+<p><strong>🔖 Теги:</strong>
+    {% for tag in post.tags.all %}
+        <a href="{% url 'posts_by_tag' tag.slug %}">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+    {% empty %}
+        нет тегов
+    {% endfor %}
+</p>
+
+<!-- 💬 Блок комментариев -->
+<hr>
+<h3>💬 Комментарии ({{ comments.count }})</h3>
+{% if comments %}
+  {% for comment in comments %}
+    <div class="border p-2 mb-2 rounded bg-light">
+      <p><strong>{{ comment.author.username }}</strong> — {{ comment.created_at|date:"d.m.Y H:i" }}</p>
+      <p>{{ comment.content }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>Комментариев пока нет.</p>
+{% endif %}
+
+<!-- 📤 Форма добавления комментария -->
+<hr>
+{% if user.is_authenticated %}
+  <h4>📤 Оставить комментарий</h4>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Отправить</button>
+  </form>
+{% else %}
+  <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий.</p>
+{% endif %}
+
+<!-- 👤 Информация об авторе и кнопки управления -->
+<p><strong>👤 Автор:</strong> {{ post.author.username }}</p>
+{% if user == post.author %}
+  <a class="btn btn-warning" href="{% url 'edit_post' post.id %}">Редактировать</a>
+  <a class="btn btn-danger" href="{% url 'delete_post' post.id %}">Удалить</a>
+  <a class="btn btn-secondary" href="{% url 'home' %}">Назад</a>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Тег: {{ tag.name }} - Мой блог{% endblock %}
+
+{% block content %}
+<!-- Заголовок страницы с тегом и кнопка возврата -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Посты с тегом: <span class="badge bg-primary">{{ tag.name }}</span></h1>
+  <a href="{% url 'home' %}" class="btn btn-secondary">← Все посты</a>
+</div>
+
+<!-- Проверка наличия постов с данным тегом -->
+{% if posts %}
+  <!-- Отображение количества найденных постов -->
+  <p class="text-muted">Найдено постов: {{ posts.count }}</p>
+  
+  <!-- Цикл по всем постам с данным тегом -->
+  {% for post in posts %}
+    <div class="card p-3 mb-3">
+      <!-- Заголовок поста с ссылкой на детальную страницу -->
+      <h3><a href="{% url 'post_detail' post.id %}" class="text-decoration-none">{{ post.title }}</a></h3>
+      
+      <!-- Краткое содержание поста (первые 30 слов) -->
+      <p>{{ post.content|truncatewords:30 }}</p>
+      
+      <!-- Мета-информация о посте -->
+      <div class="text-muted small">
+        <span>Автор: {{ post.author.username }}</span> | 
+        <span>Дата: {{ post.date|date:"d.m.Y" }}</span>
+        <!-- Ссылка на категорию поста (если есть) -->
+        {% if post.category %} | 
+          <span>Категория: <a href="{% url 'category_posts' post.category.slug %}">{{ post.category.name }}</a></span>
+        {% endif %}
+      </div>
+      
+      <!-- Отображение всех тегов поста -->
+      {% if post.tags.all %}
+        <div class="mt-2">
+          {% for tag in post.tags.all %}
+            <!-- Бейджики тегов с ссылками на страницы тегов -->
+            <a href="{% url 'posts_by_tag' tag.slug %}" class="badge bg-light text-dark text-decoration-none">
+              {{ tag.name }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <!-- Сообщение если постов с данным тегом нет -->
+  <div class="alert alert-info">
+    <h4>Постов с тегом "{{ tag.name }}" пока нет</h4>
+    <p>Будьте первым, кто напишет пост с этим тегом!</p>
+    <!-- Кнопка возврата на главную страницу -->
+    <a href="{% url 'home' %}" class="btn btn-primary">Вернуться на главную</a>
+  </div>
+{% endif %}
+{% endblock %}

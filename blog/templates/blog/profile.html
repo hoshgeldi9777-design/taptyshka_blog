@@ -1,0 +1,83 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Левая колонка - информация пользователя -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <!-- Аватар -->
+                <div class="mb-3">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" 
+                             class="rounded-circle" 
+                             width="150" height="150" 
+                             alt="Аватар {{ user.username }}"
+                             style="object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 150px; height: 150px;">
+                            <span class="text-white fs-1">📷</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted">
+                    <strong>Email:</strong> {{ user.email|default:"не указан" }}<br>
+                    <strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}
+                </p>
+                
+                <!-- Форма редактирования профиля -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        {{ u_form.username.label_tag }}
+                        {{ u_form.username }}
+                    </div>
+                    <div class="mb-2">
+                        {{ u_form.email.label_tag }}
+                        {{ u_form.email }}
+                    </div>
+                    <div class="mb-3">
+                        {{ p_form.avatar.label_tag }}
+                        {{ p_form.avatar }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        💾 Сохранить изменения
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка - посты пользователя -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📝 Мои посты ({{ posts.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% for post in posts %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <h6>
+                            <a href="{% url 'post_detail' post.id %}" class="text-decoration-none">
+                                {{ post.title }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">
+                            {{ post.date|date:"d.m.Y H:i" }}
+                            {% if post.category %}
+                                • <span class="badge bg-secondary">{{ post.category.name }}</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-3">У вас пока нет постов.</p>
+                    <a href="{% url 'create_post' %}" class="btn btn-success">Создать первый пост</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

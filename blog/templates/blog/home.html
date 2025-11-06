@@ -1,0 +1,96 @@
+{% extends 'blog/base.html' %}
+{% block title %}Главная - Мой блог{% endblock %}
+{% block content %}
+
+
+<!-- 🔍 Поиск и категории в одной строке -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <!-- Поиск -->
+  <div class="d-flex align-items-center">
+    <form method="get" action="{% url 'home' %}" class="d-flex me-3">
+      <input type="text" name="q" placeholder="🔍 Поиск..." class="form-control form-control-sm" style="width: 200px;">
+      <button type="submit" class="btn btn-outline-primary btn-sm ms-1">Найти</button>
+    </form>
+    {% if request.GET.q %}
+      <small class="text-muted">Результаты: "{{ request.GET.q }}"</small>
+    {% endif %}
+  </div>
+
+  <!-- Категории -->
+  <div class="d-flex align-items-center">
+    <span class="text-muted me-2 small">📂Категории:</span>
+    {% for category in categories %}
+      <a href="{% url 'category_posts' category.slug %}" class="badge bg-secondary text-decoration-none me-1">{{ category.name }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- 🏷️ Теги -->
+<div class="mb-3">
+  <div class="d-flex align-items-center">
+    <span class="text-muted me-2 small">🏷️Теги:</span>
+    {% for tag in tags %}
+      <a href="{% url 'posts_by_tag' tag.slug %}" class="badge bg-light text-dark text-decoration-none me-1">
+        {{ tag.name }} <small>({{ tag.posts.count }})</small>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+
+  <h1 class="mb-3">📝 Все посты</h1>
+
+  {% for post in page_obj %}
+    <div class="card mb-3 p-3">
+      <h3><a href="{% url 'post_detail' post.id %}">{{ post.title }}</a></h3>
+
+    <!-- ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ КАТЕГОРИИ -->
+    {% if post.category %}
+      <p class="mb-2">
+        <strong>🏷️ Категория:</strong>
+        <a href="{% url 'category_posts' post.category.slug %}" class="badge bg-secondary text-decoration-none">
+          {{ post.category.name }}
+        </a>
+      </p>
+    {% endif %}
+        
+      <p class="text-muted">{{ post.date }}</p>
+      <p>{{ post.text|truncatewords:5 }}</p>
+      <p><strong>Автор:</strong> {{ post.author.username }}
+          {% if post.author.profile.avatar %}
+            <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle me-1" width="20" height="20">
+            {% else %}
+              👤 
+          {% endif %}
+      </p>
+    </div>
+  {% empty %}
+    <p>Пока публикаций нет.</p>
+  {% endfor %}
+
+<div class="pagination">
+    <!-- Первая страница -->
+    <a href="?page=1" class="btn btn-outline-primary">Первая</a>
+    
+    <!-- Назад -->
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-primary">← Назад</a>
+    {% endif %}
+    
+    <!-- Номер страницы -->
+    <span class="current-page btn btn-primary">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    <!-- Вперед -->
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-primary">Вперед →</a>
+    {% endif %}
+    
+    <!-- Последняя страница -->
+    <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-primary">Последняя</a>
+</div>
+{% endblock %}
+
+
+

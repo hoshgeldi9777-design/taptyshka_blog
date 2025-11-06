@@ -1,0 +1,46 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<h2>Мои посты ({{ posts_count }})</h2>
+
+{% for post in page_obj %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h3><a href="{% url 'post_detail' post.id %}">{{ post.title }}</a></h3>
+        <p>{{ post.content|truncatewords:30 }}</p>
+        <small class="text-muted">
+            {{ post.date|date:"d.m.Y" }} | 
+            Комментарии: {{ post.comments.count }}
+        </small>
+        <div class="mt-2">
+            <a href="{% url 'edit_post' post.id %}" class="btn btn-warning btn-sm">Редактировать</a>
+            <a href="{% url 'delete_post' post.id %}" class="btn btn-danger btn-sm">Удалить</a>
+        </div>
+    </div>
+</div>
+{% empty %}
+<p>У вас пока нет постов.</p>
+<a href="{% url 'create_post' %}" class="btn btn-success">Создать первый пост</a>
+{% endfor %}
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    <a href="?page=1" class="btn btn-outline-primary btn-sm">Первая</a>
+    
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-primary btn-sm">← Назад</a>
+    {% endif %}
+    
+    <span class="btn btn-primary btn-sm">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-primary btn-sm">Вперед →</a>
+    {% endif %}
+    
+    <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-primary btn-sm">Последняя</a>
+</div>
+{% endif %}
+{% endblock %}

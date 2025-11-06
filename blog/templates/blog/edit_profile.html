@@ -1,0 +1,15 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<h2>Редактирование профиля</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    {{ u_form.as_p }}
+    {{ p_form.as_p }}
+    
+    <button type="submit" class="btn btn-success">Сохранить изменения</button>
+    <a href="{% url 'profile' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
