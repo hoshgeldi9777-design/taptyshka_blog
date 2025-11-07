@@ -8,11 +8,12 @@ from django.contrib import messages
 from django.db.models import Q
 from django.views.generic import ListView
 from .forms import PostForm, RegisterForm, CommentForm, UserUpdateForm, ProfileUpdateForm
-from .models import Post, Tag, Category, Profile
+from .models import Post, Tag, Category, Profile, Comment
 from datetime import datetime
 from rest_framework import generics
 from .serializers import PostSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.http import JsonResponse
 
 
 
@@ -159,7 +160,39 @@ def category_posts(request, slug):
         'posts': posts
     })
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, author=request.user)
+    
+    if request.method == 'POST':
+        try:
+            comment.content = request.POST.get('content', '')
+            comment.save()
+            return JsonResponse({
+                'success': True
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, author=request.user)
+    
+    if request.method == 'POST':
+        try:
+            comment.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 @login_required
 def edit_post(request, post_id):
@@ -270,11 +303,6 @@ def home(request):
     }
     
     return render(request, 'blog/home.html', context)
-
-
-
-
-
 
 
 

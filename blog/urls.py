@@ -41,4 +41,8 @@ urlpatterns = [
     # Теги
     path('api/tags/', TagListAPI.as_view(), name='tag_list_api'),
     path('api/tags/<slug:slug>/', TagPostsAPI.as_view(), name='tag_posts_api'),
+
+    path('comment/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
+    path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+
 ]
