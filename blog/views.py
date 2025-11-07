@@ -160,39 +160,34 @@ def category_posts(request, slug):
         'posts': posts
     })
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Comment
 
 @login_required
 def edit_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, author=request.user)
     
     if request.method == 'POST':
-        try:
-            comment.content = request.POST.get('content', '')
-            comment.save()
-            return JsonResponse({
-                'success': True
-            })
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        comment.content = request.POST.get('content')
+        comment.save()
+        return redirect('post_detail', post_id=comment.post.id)
     
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
-
+    return render(request, 'blog/edit_comment.html', {'comment': comment})
 
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, author=request.user)
     
     if request.method == 'POST':
-        try:
-            comment.delete()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+        post_id = comment.post.id
+        comment.delete()
+        return redirect('post_detail', post_id=post_id)
     
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    return render(request, 'blog/delete_comment.html', {'comment': comment})
+
 
 @login_required
 def edit_post(request, post_id):

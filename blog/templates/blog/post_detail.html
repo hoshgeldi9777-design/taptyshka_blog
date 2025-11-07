@@ -22,22 +22,58 @@
 <hr>
 <h3>💬 Комментарии ({{ comments.count }})</h3>
 {% for comment in comments %}
-<div class="border p-2 mb-2 rounded bg-light" id="comment-{{ comment.id }}">
+<div class="border p-2 mb-2 rounded bg-light">
     <div class="d-flex justify-content-between">
         <p class="mb-1">
             <strong>{{ comment.author.username }}</strong> — {{ comment.created_at|date:"d.m.Y H:i" }}
             {% if comment.updated_at and comment.updated_at != comment.created_at %}
-            <span class="text-muted small changed-marker">(изменено)</span>
+            <span class="text-muted small">(изменено)</span>
             {% endif %}
         </p>
         {% if user == comment.author %}
         <div>
-            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal({{ comment.id }}, `{{ comment.content|escapejs }}`)">✏️</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal({{ comment.id }}, `{{ comment.content|escapejs }}`)">🗑️</button>
+            <a href="#edit-comment-{{ comment.id }}" class="btn btn-sm btn-outline-primary">✏️</a>
+            <a href="#delete-comment-{{ comment.id }}" class="btn btn-sm btn-outline-danger">🗑️</a>
         </div>
         {% endif %}
     </div>
-    <p class="mb-0" id="comment-text-{{ comment.id }}">{{ comment.content }}</p>
+    <p class="mb-0">{{ comment.content }}</p>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div id="edit-comment-{{ comment.id }}" class="modal">
+    <div class="modal-content">
+        <a href="#" class="close">&times;</a>
+        <h5>✏️ Редактировать комментарий</h5>
+        <form method="post" action="{% url 'edit_comment' comment_id=comment.id %}">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <textarea name="content" class="form-control" rows="4" required>{{ comment.content }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="#" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно удаления -->
+<div id="delete-comment-{{ comment.id }}" class="modal">
+    <div class="modal-content">
+        <a href="#" class="close">&times;</a>
+        <h5>🗑️ Удалить комментарий</h5>
+        <p>Вы уверены, что хотите удалить этот комментарий?</p>
+        
+        <div class="border p-3 mb-3 bg-light">
+            <p><strong>{{ comment.author.username }}</strong> — {{ comment.created_at|date:"d.m.Y H:i" }}</p>
+            <p class="mb-0">{{ comment.content }}</p>
+        </div>
+        
+        <form method="post" action="{% url 'delete_comment' comment_id=comment.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="#" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
 </div>
 {% empty %}<p>Комментариев пока нет.</p>{% endfor %}
 
@@ -56,111 +92,4 @@
 <a class="btn btn-secondary" href="{% url 'home' %}">Назад</a>
 {% endif %}
 
-<!-- Модальные окна (упрощенная версия без Bootstrap) -->
-<div id="editCommentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
-  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:5px; width:90%; max-width:500px;">
-    <h5>Редактировать комментарий</h5>
-    <form id="editCommentForm">{% csrf_token %}
-      <input type="hidden" id="editCommentId">
-      <textarea id="editCommentText" class="form-control" rows="4" required></textarea>
-    </form>
-    <div style="margin-top:15px; text-align:right;">
-      <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Отмена</button>
-      <button type="button" onclick="saveComment()" class="btn btn-primary">Сохранить</button>
-    </div>
-  </div>
-</div>
-
-<div id="deleteCommentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
-  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:5px; width:90%; max-width:400px;">
-    <h5>Удалить комментарий</h5>
-    <p>Вы уверены, что хотите удалить этот комментарий?</p>
-    <p id="deleteCommentText" class="text-muted"></p>
-    <input type="hidden" id="deleteCommentId">
-    <div style="margin-top:15px; text-align:right;">
-      <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">Отмена</button>
-      <button type="button" onclick="confirmDelete()" class="btn btn-danger">Удалить</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// Функции для модальных окон
-function openEditModal(commentId, commentContent) {
-    document.getElementById('editCommentId').value = commentId;
-    document.getElementById('editCommentText').value = commentContent;
-    document.getElementById('editCommentModal').style.display = 'block';
-}
-
-function openDeleteModal(commentId, commentContent) {
-    document.getElementById('deleteCommentId').value = commentId;
-    document.getElementById('deleteCommentText').textContent = commentContent;
-    document.getElementById('deleteCommentModal').style.display = 'block';
-}
-
-function closeEditModal() {
-    document.getElementById('editCommentModal').style.display = 'none';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteCommentModal').style.display = 'none';
-}
-
-// Закрытие модальных окон при клике вне их
-document.addEventListener('click', function(event) {
-    if (event.target.id === 'editCommentModal') closeEditModal();
-    if (event.target.id === 'deleteCommentModal') closeDeleteModal();
-});
-
-function saveComment() {
-    const commentId = document.getElementById('editCommentId').value;
-    const newContent = document.getElementById('editCommentText').value;
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    fetch(`/comment/${commentId}/edit/`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken},
-        body: `content=${encodeURIComponent(newContent)}`
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            // 1. Обновляем текст комментария
-            document.getElementById(`comment-text-${commentId}`).textContent = newContent;
-            
-            // 2. Добавляем отметку "изменено"
-            let commentHeader = document.querySelector(`#comment-${commentId} .mb-1`);
-            let changedSpan = commentHeader.querySelector('.changed-marker');
-            
-            if (!changedSpan) {
-                changedSpan = document.createElement('span');
-                changedSpan.className = 'text-muted small changed-marker';
-                changedSpan.textContent = ' (изменено)';
-                commentHeader.appendChild(changedSpan);
-            }
-            
-            closeEditModal();
-            console.log('Комментарий успешно обновлен!');
-        } else {
-            alert('Ошибка при сохранении: ' + (data.error || ''));
-        }
-    }).catch(e => { 
-        console.error('Error:', e); 
-        alert('Ошибка при сохранении'); 
-    });
-}
-
-function confirmDelete() {
-    const commentId = document.getElementById('deleteCommentId').value;
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    fetch(`/comment/${commentId}/delete/`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken}
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            document.getElementById(`comment-${commentId}`).remove();
-            closeDeleteModal();
-        } else alert('Ошибка при удалении');
-    }).catch(e => { console.error('Error:', e); alert('Ошибка при удалении'); });
-}
-</script>
 {% endblock %}
